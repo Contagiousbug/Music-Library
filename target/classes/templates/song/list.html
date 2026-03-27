@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Songs — Music Library</title>
+  <link rel="stylesheet" th:href="@{/css/style.css}"/>
+</head>
+<body>
+<div class="app-wrapper">
+  <div th:replace="~{fragments/sidebar :: sidebar}" th:with="activePage='songs'"></div>
+
+  <div class="main-content">
+    <div class="topbar">
+      <div class="topbar-title">Song Library</div>
+      <div class="topbar-actions">
+        <a th:href="@{/songs/new}" sec:authorize="hasRole('ADMIN')"
+           class="btn btn-primary btn-sm">
+          + Add Song
+        </a>
+      </div>
+    </div>
+
+    <div class="page-content">
+      <div th:replace="~{fragments/alerts :: alerts}"></div>
+
+      <!-- Search & Filters -->
+      <div class="card mb-2" style="padding:16px;">
+        <form th:action="@{/songs}" method="get"
+              style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;">
+          <div style="flex:1;min-width:200px;">
+            <label class="form-label">Search Songs</label>
+            <div class="search-bar" style="max-width:100%;">
+              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <circle cx="11" cy="11" r="8"/><path stroke-linecap="round" d="M21 21l-4.35-4.35"/>
+              </svg>
+              <input type="text" name="query" th:value="${query}" placeholder="Search by title, artist, album…"/>
+            </div>
+          </div>
+          <div>
+            <label class="form-label">Genre</label>
+            <select name="genre" class="form-control" style="min-width:140px;">
+              <option value="">All Genres</option>
+              <option th:each="g : ${genres}" th:value="${g}" th:text="${g}"
+                      th:selected="${g == selectedGenre}">Genre</option>
+            </select>
+          </div>
+          <div>
+            <label class="form-label">Sort by</label>
+            <select name="sort" class="form-control">
+              <option value="title"       th:selected="${sort=='title'}">Title</option>
+              <option value="artist"      th:selected="${sort=='artist'}">Artist</option>
+              <option value="releaseYear" th:selected="${sort=='releaseYear'}">Year</option>
+              <option value="playCount"   th:selected="${sort=='playCount'}">Plays</option>
+            </select>
+          </div>
+          <div style="display:flex;gap:8px;">
+            <button type="submit" class="btn btn-primary btn-sm">Filter</button>
+            <a th:href="@{/songs}" class="btn btn-secondary btn-sm">Clear</a>
+          </div>
+        </form>
+      </div>
+
+      <!-- Results info -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+        <span class="text-secondary" style="font-size:0.85rem;">
+          Showing <strong th:text="${#lists.size(songs)}">0</strong> of
+          <strong th:text="${totalSongs}">0</strong> songs
+          <span th:if="${!#strings.isEmpty(query)}"> for "<em th:text="${query}"></em>"</span>
+          <span th:if="${!#strings.isEmpty(selectedGenre)}"> in <em th:text="${selectedGenre}"></em></span>
+        </span>
+      </div>
+
+      <!-- Song list -->
+      <div th:if="${#lists.isEmpty(songs)}" class="empty-state">
+        <div class="empty-state-icon">🎵</div>
+        <h3>No songs found</h3>
+        <p>Try a different search or filter</p>
+        <a th:href="@{/songs}" class="btn btn-secondary btn-sm">Clear filters</a>
+      </div>
+
+      <div class="card" style="padding:0;overflow:hidden;" th:if="${!#lists.isEmpty(songs)}">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Title</th>
+              <th>Artist</th>
+              <th>Album</th>
+              <th>Genre</th>
+              <th>Year</th>
+              <th>Duration</th>
+              <th>Plays</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr th:each="song, stat : ${songs}">
+              <td class="text-muted" th:text="${stat.index + 1 + (currentPage * 12)}">1</td>
+              <td>
+                <a th:href="@{/songs/{id}(id=${song.id})}"
+                   style="color:var(--text-primary);text-decoration:none;font-weight:600;"
+                   th:text="${song.title}">Title</a>
+              </td>
+              <td class="text-secondary" th:text="${song.artist}">Artist</td>
+              <td class="text-muted" th:text="${song.album ?: '—'}">Album</td>
+              <td>
+                <span class="badge badge-genre" th:if="${song.genre}" th:text="${song.genre}"></span>
+                <span th:unless="${song.genre}" class="text-muted">—</span>
+              </td>
+              <td class="text-muted" th:text="${song.releaseYear ?: '—'}">Year</td>
+              <td class="text-muted" th:text="${song.formattedDuration}">0:00</td>
+              <td class="text-muted" th:text="${song.playCount}">0</td>
+              <td>
+                <div style="display:flex;gap:6px;">
+                  <a th:href="@{/songs/{id}(id=${song.id})}" class="btn btn-ghost btn-sm btn-icon" title="View">👁</a>
+                  <a th:href="@{/songs/{id}/edit(id=${song.id})}" sec:authorize="hasRole('ADMIN')"
+                     class="btn btn-ghost btn-sm btn-icon" title="Edit">✏️</a>
+                  <form th:action="@{/songs/{id}/delete(id=${song.id})}" method="post"
+                        sec:authorize="hasRole('ADMIN')"
+                        onsubmit="return confirm('Delete this song?')">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                    <button type="submit" class="btn btn-danger btn-sm btn-icon" title="Delete">🗑</button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      <div th:if="${totalPages > 1}"
+           style="display:flex;justify-content:center;margin-top:20px;">
+        <div class="pagination">
+          <a th:href="@{/songs(page=${currentPage-1},query=${query},genre=${selectedGenre},sort=${sort})}"
+             class="page-btn" th:classappend="${currentPage == 0} ? 'disabled'">‹</a>
+          <a th:each="i : ${#numbers.sequence(0, totalPages-1)}"
+             th:href="@{/songs(page=${i},query=${query},genre=${selectedGenre},sort=${sort})}"
+             class="page-btn" th:classappend="${i == currentPage} ? 'active'"
+             th:text="${i+1}">1</a>
+          <a th:href="@{/songs(page=${currentPage+1},query=${query},genre=${selectedGenre},sort=${sort})}"
+             class="page-btn" th:classappend="${currentPage == totalPages-1} ? 'disabled'">›</a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+</body>
+</html>

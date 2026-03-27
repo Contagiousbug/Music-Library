@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dashboard — Music Library</title>
+  <link rel="stylesheet" th:href="@{/css/style.css}"/>
+</head>
+<body>
+<div class="app-wrapper">
+
+  <!-- Sidebar -->
+  <div th:replace="~{fragments/sidebar :: sidebar}" th:with="activePage='dashboard'"></div>
+
+  <div class="main-content">
+    <!-- Topbar -->
+    <div class="topbar">
+      <div class="topbar-title">Dashboard</div>
+      <div class="topbar-actions">
+        <a th:href="@{/playlists/new}" class="btn btn-primary btn-sm">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+          </svg>
+          New Playlist
+        </a>
+      </div>
+    </div>
+
+    <div class="page-content">
+      <div th:replace="~{fragments/alerts :: alerts}"></div>
+
+      <!-- Welcome -->
+      <div style="margin-bottom:28px;">
+        <h2 class="font-serif" style="font-size:1.6rem;margin-bottom:4px;">
+          Welcome back, <span class="text-accent" th:text="${user.displayName ?: user.username}">User</span> 👋
+        </h2>
+        <p class="text-secondary" style="font-size:0.9rem;">Here's what's in your music library today.</p>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats-grid mb-3">
+        <div class="stat-card">
+          <div class="stat-icon">♪</div>
+          <div>
+            <div class="stat-value" th:text="${#lists.size(recentSongs)}">0</div>
+            <div class="stat-label">Songs in Library</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">▤</div>
+          <div>
+            <div class="stat-value" th:text="${playlistCount}">0</div>
+            <div class="stat-label">My Playlists</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="font-size:1rem;">🎵</div>
+          <div>
+            <div class="stat-value" th:text="${#lists.size(genres)}">0</div>
+            <div class="stat-label">Genres</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="font-size:1rem;" sec:authorize="hasRole('ADMIN')">👥</div>
+          <div sec:authorize="hasRole('ADMIN')">
+            <div class="stat-value">—</div>
+            <div class="stat-label">Admin Panel</div>
+          </div>
+          <div sec:authorize="!hasRole('ADMIN')">
+            <div class="stat-icon" style="font-size:1rem;">🌍</div>
+            <div>
+              <div class="stat-value">∞</div>
+              <div class="stat-label">Public Playlists</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Two-column layout -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">
+
+        <!-- My Playlists -->
+        <div>
+          <div class="section-header">
+            <span class="section-title">My Playlists</span>
+            <a th:href="@{/playlists}" class="btn btn-ghost btn-sm">View all</a>
+          </div>
+
+          <div th:if="${#lists.isEmpty(playlists)}" class="empty-state" style="padding:30px;">
+            <div class="empty-state-icon">🎵</div>
+            <h3>No playlists yet</h3>
+            <p>Create your first playlist to organise your music</p>
+            <a th:href="@{/playlists/new}" class="btn btn-primary btn-sm">Create Playlist</a>
+          </div>
+
+          <div class="playlists-grid" th:if="${!#lists.isEmpty(playlists)}">
+            <a th:each="playlist : ${playlists}" th:href="@{/playlists/{id}(id=${playlist.id})}"
+               class="playlist-card">
+              <div class="playlist-cover">🎵</div>
+              <div class="playlist-name" th:text="${playlist.name}">Playlist Name</div>
+              <div class="playlist-meta">
+                <span th:text="${playlist.songCount}">0</span> songs ·
+                <span th:text="${playlist.formattedTotalDuration}">0m</span>
+              </div>
+            </a>
+          </div>
+        </div>
+
+        <!-- Top Songs -->
+        <div>
+          <div class="section-header">
+            <span class="section-title">🔥 Most Played</span>
+            <a th:href="@{/songs}" class="btn btn-ghost btn-sm">Browse all</a>
+          </div>
+
+          <div class="songs-grid">
+            <div th:each="song, stat : ${topSongs}"
+                 class="song-card"
+                 th:onclick="|window.location.href='@{/songs/{id}(id=${song.id})}'|">
+              <div style="color:var(--text-muted);font-size:0.8rem;width:20px;text-align:center;flex-shrink:0;"
+                   th:text="${stat.index + 1}">1</div>
+              <div class="song-cover">🎵</div>
+              <div class="song-info">
+                <div class="song-title" th:text="${song.title}">Song Title</div>
+                <div class="song-artist" th:text="${song.artist}">Artist</div>
+              </div>
+              <div style="text-align:right;flex-shrink:0;">
+                <div class="song-duration" th:text="${song.formattedDuration}">0:00</div>
+                <div style="font-size:0.7rem;color:var(--text-muted);margin-top:2px;">
+                  <span th:text="${song.playCount}">0</span> plays
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Recent Songs -->
+      <div class="mt-3">
+        <div class="section-header">
+          <span class="section-title">Recently Added</span>
+          <a th:href="@{/songs}" class="btn btn-ghost btn-sm">See all</a>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px;">
+          <div th:each="song : ${recentSongs}"
+               class="song-card"
+               th:onclick="|window.location.href='@{/songs/{id}(id=${song.id})}'|">
+            <div class="song-cover">🎵</div>
+            <div class="song-info">
+              <div class="song-title" th:text="${song.title}">Song</div>
+              <div class="song-artist" th:text="${song.artist}">Artist</div>
+              <div class="song-meta" th:text="${song.genre}">Genre</div>
+            </div>
+            <div class="song-duration" th:text="${song.formattedDuration}">0:00</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script th:inline="javascript">
+  // Pass currentUser to sidebar
+  window.currentUserName = /*[[${user.username}]]*/ 'User';
+</script>
+</body>
+</html>

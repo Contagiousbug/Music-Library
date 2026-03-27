@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>My Playlists — Music Library</title>
+  <link rel="stylesheet" th:href="@{/css/style.css}"/>
+</head>
+<body>
+<div class="app-wrapper">
+  <div th:replace="~{fragments/sidebar :: sidebar}" th:with="activePage='playlists'"></div>
+
+  <div class="main-content">
+    <div class="topbar">
+      <div class="topbar-title">My Playlists</div>
+      <div class="topbar-actions">
+        <a th:href="@{/playlists/new}" class="btn btn-primary btn-sm">+ New Playlist</a>
+      </div>
+    </div>
+
+    <div class="page-content">
+      <div th:replace="~{fragments/alerts :: alerts}"></div>
+
+      <!-- Search -->
+      <form th:action="@{/playlists}" method="get" style="margin-bottom:20px;">
+        <div class="search-bar" style="max-width:360px;">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <circle cx="11" cy="11" r="8"/><path stroke-linecap="round" d="M21 21l-4.35-4.35"/>
+          </svg>
+          <input type="text" name="query" th:value="${query}" placeholder="Search playlists…"/>
+        </div>
+      </form>
+
+      <!-- Empty state -->
+      <div th:if="${#lists.isEmpty(playlists)}" class="empty-state">
+        <div class="empty-state-icon">🎵</div>
+        <h3 th:if="${!#strings.isEmpty(query)}">No playlists match "<span th:text="${query}"></span>"</h3>
+        <h3 th:if="${#strings.isEmpty(query)}">You have no playlists yet</h3>
+        <p>Create your first playlist and start adding songs!</p>
+        <a th:href="@{/playlists/new}" class="btn btn-primary">Create Playlist</a>
+      </div>
+
+      <!-- Playlists grid -->
+      <div class="playlists-grid" th:unless="${#lists.isEmpty(playlists)}">
+        <div th:each="playlist : ${playlists}" class="playlist-card"
+             style="position:relative;">
+
+          <!-- Public badge -->
+          <div style="position:absolute;top:10px;right:10px;">
+            <span class="badge badge-public" th:if="${playlist.public}">Public</span>
+            <span class="badge badge-private" th:unless="${playlist.public}">Private</span>
+          </div>
+
+          <a th:href="@{/playlists/{id}(id=${playlist.id})}" style="text-decoration:none;color:inherit;">
+            <div class="playlist-cover">🎵</div>
+            <div class="playlist-name" th:text="${playlist.name}">Name</div>
+            <div class="playlist-meta">
+              <span th:text="${playlist.songCount}">0</span> songs ·
+              <span th:text="${playlist.formattedTotalDuration}">0m</span>
+            </div>
+            <div class="playlist-meta" th:if="${playlist.description}"
+                 style="margin-top:6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"
+                 th:text="${playlist.description}"></div>
+          </a>
+
+          <!-- Actions -->
+          <div style="display:flex;gap:6px;margin-top:12px;">
+            <a th:href="@{/playlists/{id}/edit(id=${playlist.id})}"
+               class="btn btn-ghost btn-sm" style="flex:1;justify-content:center;">Edit</a>
+            <form th:action="@{/playlists/{id}/delete(id=${playlist.id})}" method="post"
+                  onsubmit="return confirm('Delete playlist?')">
+              <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+              <button type="submit" class="btn btn-danger btn-sm">🗑</button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+</body>
+</html>

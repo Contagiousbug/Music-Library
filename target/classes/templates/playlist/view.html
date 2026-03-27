@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title th:text="${playlist.name + ' — Music Library'}">Playlist</title>
+  <link rel="stylesheet" th:href="@{/css/style.css}"/>
+</head>
+<body>
+<div class="app-wrapper">
+  <div th:replace="~{fragments/sidebar :: sidebar}" th:with="activePage='playlists'"></div>
+
+  <div class="main-content">
+    <div class="topbar">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <a th:href="@{/playlists}" class="btn btn-ghost btn-sm btn-icon">←</a>
+        <div class="topbar-title" th:text="${playlist.name}">Playlist</div>
+      </div>
+      <div class="topbar-actions" th:if="${isOwner}">
+        <a th:href="@{/playlists/{id}/edit(id=${playlist.id})}" class="btn btn-secondary btn-sm">Edit</a>
+        <form th:action="@{/playlists/{id}/delete(id=${playlist.id})}" method="post"
+              onsubmit="return confirm('Delete this playlist?')" style="display:inline;">
+          <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+          <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+        </form>
+      </div>
+    </div>
+
+    <div class="page-content">
+      <div th:replace="~{fragments/alerts :: alerts}"></div>
+
+      <!-- Playlist hero -->
+      <div class="card mb-2" style="display:flex;gap:24px;align-items:flex-start;">
+        <div style="width:140px;height:140px;border-radius:12px;
+                    background:linear-gradient(135deg,#1e1e2e,var(--bg-surface));
+                    display:flex;align-items:center;justify-content:center;
+                    font-size:3.5rem;flex-shrink:0;border:1px solid var(--border);">
+          🎵
+        </div>
+        <div>
+          <span class="badge badge-public" th:if="${playlist.public}">Public</span>
+          <span class="badge badge-private" th:unless="${playlist.public}">Private</span>
+          <h1 class="font-serif" style="font-size:1.8rem;margin:8px 0 4px;"
+              th:text="${playlist.name}">Playlist</h1>
+          <p class="text-secondary" th:if="${playlist.description}" th:text="${playlist.description}"></p>
+          <p class="text-muted" style="margin-top:8px;font-size:0.85rem;">
+            <span th:text="${playlist.owner.displayName ?: playlist.owner.username}">Owner</span> ·
+            <span th:text="${playlist.songCount}">0</span> songs ·
+            <span th:text="${playlist.formattedTotalDuration}">0m</span>
+          </p>
+        </div>
+      </div>
+
+      <!-- Add song form (owner only) -->
+      <div class="card mb-2" th:if="${isOwner and !#lists.isEmpty(availableSongs)}">
+        <div class="section-title" style="margin-bottom:14px;">Add Song to Playlist</div>
+        <form th:action="@{/playlists/{id}/songs/add(id=${playlist.id})}" method="post"
+              style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;">
+          <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+          <div style="flex:1;min-width:200px;">
+            <label class="form-label">Select Song</label>
+            <select name="songId" class="form-control" required>
+              <option value="">— Choose a song —</option>
+              <option th:each="song : ${availableSongs}"
+                      th:value="${song.id}"
+                      th:text="${song.title + ' — ' + song.artist}">Song</option>
+            </select>
+          </div>
+          <button type="submit" class="btn btn-primary">Add Song</button>
+        </form>
+      </div>
+
+      <div class="card mb-2" th:if="${isOwner and #lists.isEmpty(availableSongs)
+                                      and !#lists.isEmpty(playlist.playlistSongs)}"
+           style="padding:12px 20px;display:flex;align-items:center;gap:10px;color:var(--text-secondary);font-size:0.88rem;">
+        <span>✓</span> All available songs have been added to this playlist.
+      </div>
+
+      <!-- Songs in playlist -->
+      <div class="card" style="padding:0;overflow:hidden;" th:if="${!#lists.isEmpty(playlist.playlistSongs)}">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Title</th>
+              <th>Artist</th>
+              <th>Album</th>
+              <th>Genre</th>
+              <th>Duration</th>
+              <th th:if="${isOwner}">Remove</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr th:each="ps, stat : ${playlist.playlistSongs}">
+              <td class="text-muted" th:text="${stat.index + 1}">1</td>
+              <td>
+                <a th:href="@{/songs/{id}(id=${ps.song.id})}"
+                   style="color:var(--text-primary);text-decoration:none;font-weight:600;"
+                   th:text="${ps.song.title}">Title</a>
+              </td>
+              <td class="text-secondary" th:text="${ps.song.artist}">Artist</td>
+              <td class="text-muted"   th:text="${ps.song.album ?: '—'}">Album</td>
+              <td>
+                <span class="badge badge-genre" th:if="${ps.song.genre}" th:text="${ps.song.genre}"></span>
+                <span th:unless="${ps.song.genre}" class="text-muted">—</span>
+              </td>
+              <td class="text-muted" th:text="${ps.song.formattedDuration}">0:00</td>
+              <td th:if="${isOwner}">
+                <form th:action="@{/playlists/{pid}/songs/{sid}/remove(pid=${playlist.id},sid=${ps.song.id})}"
+                      method="post"
+                      onsubmit="return confirm('Remove this song?')">
+                  <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                  <button type="submit" class="btn btn-danger btn-sm btn-icon" title="Remove">✕</button>
+                </form>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Empty playlist -->
+      <div th:if="${#lists.isEmpty(playlist.playlistSongs)}" class="empty-state">
+        <div class="empty-state-icon">🎵</div>
+        <h3>This playlist is empty</h3>
+        <p th:if="${isOwner}">Add songs from the section above to get started.</p>
+        <p th:unless="${isOwner}">No songs have been added yet.</p>
+      </div>
+
+    </div>
+  </div>
+</div>
+</body>
+</html>

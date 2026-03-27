@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Manage Users — Music Library</title>
+  <link rel="stylesheet" th:href="@{/css/style.css}"/>
+</head>
+<body>
+<div class="app-wrapper">
+  <div th:replace="~{fragments/sidebar :: sidebar}" th:with="activePage='users'"></div>
+
+  <div class="main-content">
+    <div class="topbar">
+      <div class="topbar-title">Manage Users</div>
+      <div class="topbar-actions">
+        <span class="text-secondary" style="font-size:0.85rem;">
+          <strong th:text="${totalActive}">0</strong> active users
+        </span>
+      </div>
+    </div>
+
+    <div class="page-content">
+      <div th:replace="~{fragments/alerts :: alerts}"></div>
+
+      <!-- Search -->
+      <form th:action="@{/users}" method="get" style="margin-bottom:20px;">
+        <div class="search-bar" style="max-width:360px;">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <circle cx="11" cy="11" r="8"/><path stroke-linecap="round" d="M21 21l-4.35-4.35"/>
+          </svg>
+          <input type="text" name="query" th:value="${query}" placeholder="Search users by name or email…"/>
+        </div>
+      </form>
+
+      <div class="card" style="padding:0;overflow:hidden;">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Username</th>
+              <th>Display Name</th>
+              <th>Email</th>
+              <th>Roles</th>
+              <th>Status</th>
+              <th>Joined</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr th:each="u : ${users}">
+              <td class="text-muted" th:text="${u.id}">1</td>
+              <td style="font-weight:600;" th:text="${u.username}">user</td>
+              <td class="text-secondary" th:text="${u.displayName ?: '—'}">Name</td>
+              <td class="text-secondary" th:text="${u.email}">email</td>
+              <td>
+                <span th:each="role : ${u.roles}"
+                      class="badge"
+                      th:classappend="${role.name.name() == 'ROLE_ADMIN'} ? 'badge-genre' : 'badge-private'"
+                      style="margin-right:4px;"
+                      th:text="${role.name.name().replace('ROLE_','')}">USER</span>
+              </td>
+              <td>
+                <span th:if="${u.active}" class="badge badge-public">Active</span>
+                <span th:unless="${u.active}" class="badge badge-private">Inactive</span>
+              </td>
+              <td class="text-muted"
+                  th:text="${u.createdAt != null} ? ${#temporals.format(u.createdAt,'dd MMM yyyy')} : '—'">Date</td>
+              <td>
+                <form th:action="@{/users/{id}/deactivate(id=${u.id})}" method="post"
+                      th:if="${u.active}"
+                      onsubmit="return confirm('Deactivate this user?')" style="display:inline;">
+                  <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                  <button type="submit" class="btn btn-danger btn-sm">Deactivate</button>
+                </form>
+                <span th:unless="${u.active}" class="text-muted" style="font-size:0.8rem;">—</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+  </div>
+</div>
+</body>
+</html>

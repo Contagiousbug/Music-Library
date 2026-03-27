@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<body>
+
+<!-- ══════════════════════════════════════════
+     Sidebar Fragment  th:fragment="sidebar"
+══════════════════════════════════════════ -->
+<aside th:fragment="sidebar" class="sidebar">
+
+  <div class="sidebar-logo">
+    <h1>♪ MusicLib</h1>
+    <span>Your personal collection</span>
+  </div>
+
+  <nav class="sidebar-nav">
+
+    <div class="nav-section-label">Main</div>
+
+    <a th:href="@{/dashboard}"
+       th:classappend="${activePage == 'dashboard'} ? 'active'"
+       class="nav-item">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round"
+              d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+      </svg>
+      Dashboard
+    </a>
+
+    <div class="nav-section-label">Music</div>
+
+    <a th:href="@{/songs}"
+       th:classappend="${activePage == 'songs'} ? 'active'"
+       class="nav-item">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round"
+              d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"/>
+      </svg>
+      All Songs
+    </a>
+
+    <a th:href="@{/playlists}"
+       th:classappend="${activePage == 'playlists'} ? 'active'"
+       class="nav-item">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round"
+              d="M4 6h16M4 10h16M4 14h10M4 18h10"/>
+      </svg>
+      My Playlists
+    </a>
+
+    <a th:href="@{/playlists/public}"
+       th:classappend="${activePage == 'public'} ? 'active'"
+       class="nav-item">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round"
+              d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064"/>
+      </svg>
+      Public Playlists
+    </a>
+
+    <div class="nav-section-label">Account</div>
+
+    <a th:href="@{/users/profile}"
+       th:classappend="${activePage == 'profile'} ? 'active'"
+       class="nav-item">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round"
+              d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+      </svg>
+      My Profile
+    </a>
+
+    <!-- Admin only -->
+    <div sec:authorize="hasRole('ADMIN')">
+      <div class="nav-section-label">Admin</div>
+
+      <a th:href="@{/songs/new}"
+         th:classappend="${activePage == 'add-song'} ? 'active'"
+         class="nav-item">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+        </svg>
+        Add Song
+      </a>
+
+      <a th:href="@{/users}"
+         th:classappend="${activePage == 'users'} ? 'active'"
+         class="nav-item">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round"
+                d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+        </svg>
+        Manage Users
+      </a>
+
+      <a th:href="@{/h2-console}" target="_blank" class="nav-item">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round"
+                d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"/>
+        </svg>
+        H2 Console ↗
+      </a>
+    </div>
+
+  </nav>
+
+  <!-- Bottom user info -->
+  <div class="sidebar-user">
+    <div class="user-avatar"
+         th:text="${#strings.substring(currentUser?.displayName ?: currentUser?.username ?: 'U', 0, 1).toUpperCase()}">U</div>
+    <div class="user-info">
+      <div class="name" th:text="${currentUser?.displayName ?: currentUser?.username}">User</div>
+      <div class="role" sec:authorize="hasRole('ADMIN')" style="color:var(--accent)">Administrator</div>
+      <div class="role" sec:authorize="!hasRole('ADMIN')">Member</div>
+    </div>
+    <a th:href="@{/auth/logout}" class="logout-btn" title="Logout">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round"
+              d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+      </svg>
+    </a>
+  </div>
+
+</aside>
+
+</body>
+</html>

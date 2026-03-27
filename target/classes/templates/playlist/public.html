@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Public Playlists — Music Library</title>
+  <link rel="stylesheet" th:href="@{/css/style.css}"/>
+</head>
+<body>
+<div class="app-wrapper">
+  <div th:replace="~{fragments/sidebar :: sidebar}" th:with="activePage='public'"></div>
+
+  <div class="main-content">
+    <div class="topbar">
+      <div class="topbar-title">🌍 Public Playlists</div>
+    </div>
+
+    <div class="page-content">
+      <p class="text-secondary mb-2" style="font-size:0.9rem;">
+        Discover playlists shared by the community.
+      </p>
+
+      <div th:if="${#lists.isEmpty(playlists)}" class="empty-state">
+        <div class="empty-state-icon">🌐</div>
+        <h3>No public playlists yet</h3>
+        <p>Be the first to share a playlist with the community!</p>
+        <a th:href="@{/playlists/new}" class="btn btn-primary">Create Public Playlist</a>
+      </div>
+
+      <div class="playlists-grid" th:unless="${#lists.isEmpty(playlists)}">
+        <a th:each="playlist : ${playlists}"
+           th:href="@{/playlists/{id}(id=${playlist.id})}"
+           class="playlist-card">
+          <div class="playlist-cover">🎵</div>
+          <div class="playlist-name" th:text="${playlist.name}">Name</div>
+          <div class="playlist-meta">
+            by <span th:text="${playlist.owner.displayName ?: playlist.owner.username}">Owner</span>
+          </div>
+          <div class="playlist-meta">
+            <span th:text="${playlist.songCount}">0</span> songs ·
+            <span th:text="${playlist.formattedTotalDuration}">0m</span>
+          </div>
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

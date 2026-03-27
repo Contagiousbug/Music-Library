@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title th:text="${playlistId != null} ? 'Edit Playlist' : 'New Playlist'">Playlist Form</title>
+  <link rel="stylesheet" th:href="@{/css/style.css}"/>
+</head>
+<body>
+<div class="app-wrapper">
+  <div th:replace="~{fragments/sidebar :: sidebar}" th:with="activePage='playlists'"></div>
+
+  <div class="main-content">
+    <div class="topbar">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <a th:href="${playlistId != null} ? @{/playlists/{id}(id=${playlistId})} : @{/playlists}"
+           class="btn btn-ghost btn-sm btn-icon">←</a>
+        <div class="topbar-title"
+             th:text="${playlistId != null} ? 'Edit Playlist' : 'Create New Playlist'">Form</div>
+      </div>
+    </div>
+
+    <div class="page-content">
+      <div class="card" style="max-width:580px;margin:0 auto;">
+
+        <form th:action="${playlistId != null} ? @{/playlists/{id}/edit(id=${playlistId})} : @{/playlists/new}"
+              method="post" th:object="${playlistDto}">
+          <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+
+          <div class="form-group">
+            <label class="form-label">Playlist Name *</label>
+            <input type="text" th:field="*{name}" class="form-control"
+                   placeholder="e.g. Morning Vibes, Road Trip Mix…" required autofocus/>
+            <div class="form-error" th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Description</label>
+            <textarea th:field="*{description}" class="form-control" rows="3"
+                      placeholder="What's this playlist about?"></textarea>
+            <div class="form-error" th:if="${#fields.hasErrors('description')}" th:errors="*{description}"></div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Cover Image URL <span style="color:var(--text-muted)">(optional)</span></label>
+            <input type="url" th:field="*{coverImageUrl}" class="form-control"
+                   placeholder="https://…/cover.jpg"/>
+          </div>
+
+          <div class="form-group">
+            <label class="form-check">
+              <input type="checkbox" th:field="*{public}"/>
+              <div>
+                <span style="font-size:0.9rem;font-weight:500;">Make playlist public</span>
+                <div class="form-hint" style="margin-top:0;">Other users can discover and view this playlist</div>
+              </div>
+            </label>
+          </div>
+
+          <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:8px;">
+            <a th:href="${playlistId != null} ? @{/playlists/{id}(id=${playlistId})} : @{/playlists}"
+               class="btn btn-secondary">Cancel</a>
+            <button type="submit" class="btn btn-primary"
+                    th:text="${playlistId != null} ? 'Update Playlist' : 'Create Playlist'">Save</button>
+          </div>
+        </form>
+
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>
